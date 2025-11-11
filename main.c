@@ -14,6 +14,7 @@
 #include "logger.h"
 #include "config.h"
 #include "signals.h"
+#include "acl.h"
 
 // Global flag to track if we're in the main loop (not running a foreground process)
 static volatile sig_atomic_t in_main_loop = 1;
@@ -27,6 +28,7 @@ static char *command_list[] = {
     "hello", "help", "clear", "exec", "list", "create", "copy", "delete",
     "run", "pslist", "fgproc", "bgproc", "killproc", "whoami",
     "encrypt", "decrypt", "checksum",
+    "server", "client", "sandbox", "acl",
     "exit", "quit", NULL
 };
 
@@ -85,6 +87,10 @@ struct Command commands[] = {
     {"encrypt", cmd_encrypt},
     {"decrypt", cmd_decrypt},
     {"checksum", cmd_checksum},
+    {"server", cmd_server},
+    {"client", cmd_client},
+    {"sandbox", cmd_sandbox},
+    {"acl", cmd_acl},
     {NULL, NULL}
 };
 
@@ -121,6 +127,7 @@ int main() {
     }
 
     load_users();
+    load_acl_rules();
     printf("🔒 Welcome to SecureSysCLI\n");
     printf("Note: Use 'exit' to quit. Ctrl+C will kill foreground processes.\n");
 
@@ -190,6 +197,13 @@ int main() {
         int found = 0;
         for (int i = 0; commands[i].name != NULL; i++) {
             if (strcmp(argv[0], commands[i].name) == 0) {
+                // Check ACL permission
+                if (!check_command_permission(argv[0])) {
+                    printf("🚫  Permission denied: you don't have permission to execute '%s'\n", argv[0]);
+                    log_command("UNAUTHORIZED command attempt");
+                    found = 1;
+                    break;
+                }
                 commands[i].func(argc, argv);
                 found = 1;
                 break;
