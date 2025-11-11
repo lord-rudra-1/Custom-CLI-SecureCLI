@@ -1,4 +1,4 @@
-CC = g++
+CC = gcc
 CFLAGS = -Wall -Wextra
 TARGET = project
 SOURCES = main.c commands.c file_management.c process_management.c terminal.c

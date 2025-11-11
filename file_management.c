@@ -104,4 +104,3 @@ void cmd_delete(int argc, char *argv[]) {
         perror("unlink");
     }
 }
-
