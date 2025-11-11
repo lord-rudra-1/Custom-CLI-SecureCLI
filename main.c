@@ -25,7 +25,9 @@ volatile pid_t foreground_pid = 0;
 // List of available commands
 static char *command_list[] = {
     "hello", "help", "clear", "exec", "list", "create", "copy", "delete",
-    "run", "pslist", "fgproc", "bgproc", "killproc", "whoami", "exit", "quit", NULL
+    "run", "pslist", "fgproc", "bgproc", "killproc", "whoami",
+    "encrypt", "decrypt", "checksum",
+    "exit", "quit", NULL
 };
 
 // Command generator for readline completion
@@ -80,6 +82,9 @@ struct Command commands[] = {
     {"bgproc", cmd_bgproc},
     {"killproc", cmd_killproc},
     {"whoami", cmd_whoami},
+    {"encrypt", cmd_encrypt},
+    {"decrypt", cmd_decrypt},
+    {"checksum", cmd_checksum},
     {NULL, NULL}
 };
 

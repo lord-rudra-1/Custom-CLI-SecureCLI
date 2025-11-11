@@ -6,10 +6,12 @@
 #include <signal.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <termios.h>
 #include "terminal.h"
 #include "logger.h"
 #include "auth.h"
 #include "signals.h"
+#include "crypto.h"
 
 // ---------------------------------------------------------------------------
 // 🔹 Input Sanitization
@@ -54,6 +56,9 @@ void cmd_help(int argc, char *argv[]) {
     printf("  bgproc <jobid>       - Resume stopped job in background\n");
     printf("  killproc <pid>       - Kill a process by PID (admin only)\n");
     printf("  whoami               - Show current user and role\n");
+    printf("  encrypt <in> <out>   - Encrypt a file with password\n");
+    printf("  decrypt <in> <out>    - Decrypt a file with password\n");
+    printf("  checksum <file>       - Compute SHA-256 checksum of a file\n");
     printf("  exit / quit          - Exit the CLI\n");
     log_command("help");
 }
@@ -142,4 +147,112 @@ void cmd_whoami(int argc, char *argv[]) {
         printf("No user logged in.\n");
     }
     log_command("whoami");
+}
+
+// ---------------------------------------------------------------------------
+// Helper function to read password without echoing (for crypto commands)
+// ---------------------------------------------------------------------------
+static void read_crypto_password(char *password, size_t max_len) {
+    struct termios old_term, new_term;
+    
+    // Get current terminal settings
+    tcgetattr(STDIN_FILENO, &old_term);
+    new_term = old_term;
+    
+    // Disable echo
+    new_term.c_lflag &= ~(ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &new_term);
+    
+    // Read password
+    if (fgets(password, max_len, stdin) == NULL) {
+        password[0] = '\0';
+    } else {
+        // Remove newline if present
+        size_t len = strlen(password);
+        if (len > 0 && password[len - 1] == '\n') {
+            password[len - 1] = '\0';
+        }
+    }
+    
+    // Restore terminal settings
+    tcsetattr(STDIN_FILENO, TCSANOW, &old_term);
+    printf("\n");  // Print newline after password input
+}
+
+// ---------------------------------------------------------------------------
+// encrypt <infile> <outfile> - Encrypt a file
+// ---------------------------------------------------------------------------
+void cmd_encrypt(int argc, char *argv[]) {
+    if (argc < 3) {
+        printf("Usage: encrypt <input> <output>\n");
+        return;
+    }
+
+    char pass[128];
+    printf("Enter password: ");
+    fflush(stdout);
+    read_crypto_password(pass, sizeof(pass));
+
+    if (strlen(pass) == 0) {
+        printf("Password cannot be empty\n");
+        return;
+    }
+
+    if (encrypt_file(argv[1], argv[2], pass)) {
+        printf("Encrypted %s -> %s\n", argv[1], argv[2]);
+        log_command("encrypt");
+    } else {
+        printf("Encryption failed\n");
+    }
+    
+    // Clear password from memory
+    memset(pass, 0, sizeof(pass));
+}
+
+// ---------------------------------------------------------------------------
+// decrypt <infile> <outfile> - Decrypt a file
+// ---------------------------------------------------------------------------
+void cmd_decrypt(int argc, char *argv[]) {
+    if (argc < 3) {
+        printf("Usage: decrypt <input> <output>\n");
+        return;
+    }
+
+    char pass[128];
+    printf("Enter password: ");
+    fflush(stdout);
+    read_crypto_password(pass, sizeof(pass));
+
+    if (strlen(pass) == 0) {
+        printf("Password cannot be empty\n");
+        return;
+    }
+
+    if (decrypt_file(argv[1], argv[2], pass)) {
+        printf("Decrypted %s -> %s\n", argv[1], argv[2]);
+        log_command("decrypt");
+    } else {
+        printf("Decryption failed (wrong password or corrupted file)\n");
+    }
+    
+    // Clear password from memory
+    memset(pass, 0, sizeof(pass));
+}
+
+// ---------------------------------------------------------------------------
+// checksum <file> - Compute SHA-256 checksum
+// ---------------------------------------------------------------------------
+void cmd_checksum(int argc, char *argv[]) {
+    if (argc < 2) {
+        printf("Usage: checksum <file>\n");
+        return;
+    }
+
+    char hex[65];
+    if (sha256_file_hex(argv[1], hex)) {
+        printf("%s  %s\n", hex, argv[1]);
+        log_command("checksum");
+    } else {
+        printf("Checksum failed\n");
+    }
 }
