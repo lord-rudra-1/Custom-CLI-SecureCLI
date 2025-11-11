@@ -44,3 +44,7 @@ Thumbs.db
 # Core dumps
 core
 core.*
+
+# Log files
+*.log
+securecli.log

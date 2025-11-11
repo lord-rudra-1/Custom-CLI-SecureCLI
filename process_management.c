@@ -4,6 +4,10 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <sys/types.h>
+#include "auth.h"
+#include "logger.h"
+#include "signals.h"
 
 #define MAX_JOBS 100
 
@@ -62,6 +66,9 @@ void cmd_run(int argc, char *argv[]) {
     }
 
     if (pid == 0) {
+        // Child process - restore default signal handlers
+        signal(SIGINT, SIG_DFL);
+        signal(SIGTERM, SIG_DFL);
         execvp(argv[1], &argv[1]);
         perror("execvp");
         exit(1);
@@ -70,8 +77,18 @@ void cmd_run(int argc, char *argv[]) {
             printf("[bg] %d started: %s\n", pid, argv[1]);
             add_job(pid, argv[1]);
         } else {
+            // Foreground process - set global variable so signal handler can forward SIGINT
+            foreground_pid = pid;
+            
             int status;
             waitpid(pid, &status, 0);
+            
+            // Clear foreground PID after process completes
+            foreground_pid = 0;
+            
+            if (WIFSIGNALED(status)) {
+                printf("\nProcess terminated by signal %d\n", WTERMSIG(status));
+            }
         }
     }
 }
@@ -103,8 +120,20 @@ void cmd_fgproc(int argc, char *argv[]) {
 
     pid_t pid = jobs[jid].pid;
     printf("Bringing job %d (PID %d) to foreground...\n", jid, pid);
+    
+    // Set global variable so signal handler can forward SIGINT
+    foreground_pid = pid;
+    
     int status;
     waitpid(pid, &status, 0);
+    
+    // Clear foreground PID after process completes
+    foreground_pid = 0;
+    
+    if (WIFSIGNALED(status)) {
+        printf("\nProcess terminated by signal %d\n", WTERMSIG(status));
+    }
+    
     jobs[jid].running = 0;   // mark as stopped/finished
     remove_job(pid);
 }
@@ -138,11 +167,18 @@ void cmd_killproc(int argc, char *argv[]) {
         return;
     }
 
+    if (!is_admin()) {
+        printf("🚫  Permission denied: only admin can kill processes.\n");
+        log_command("UNAUTHORIZED killproc attempt");
+        return;
+    }
+
     pid_t pid = atoi(argv[1]);
-    if (kill(pid, SIGKILL) == 0) {
+    if (kill(pid, SIGTERM) == 0) {
         int status;
         waitpid(pid, &status, 0);  // reap the process to avoid zombie
-        printf("Killed process %d\n", pid);
+        printf("Process %d terminated.\n", pid);
+        log_command("killproc");
 
         // Remove from job table
         for (int i = 0; i < job_count; i++) {
@@ -156,7 +192,7 @@ void cmd_killproc(int argc, char *argv[]) {
             }
         }
     } else {
-        perror("kill");
+        perror("kill failed");
     }
 }
 

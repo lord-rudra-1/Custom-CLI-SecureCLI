@@ -3,6 +3,8 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include "auth.h"
+#include "logger.h"
 
 // list <dir>
 void cmd_list(int argc, char *argv[]) {
@@ -98,9 +100,17 @@ void cmd_delete(int argc, char *argv[]) {
         return;
     }
 
+    // 🔒 check permission
+    if (!is_admin()) {
+        printf("🚫  Permission denied: only admin can delete files.\n");
+        log_command("UNAUTHORIZED delete attempt");
+        return;
+    }
+
     if (unlink(argv[1]) == 0) {
-        printf("Deleted: %s\n", argv[1]);
+        printf("File deleted: %s\n", argv[1]);
+        log_command("delete file");
     } else {
-        perror("unlink");
+        perror("unlink failed");
     }
 }

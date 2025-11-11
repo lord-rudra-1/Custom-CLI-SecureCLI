@@ -1,11 +1,12 @@
 CC = gcc
 CFLAGS = -Wall -Wextra
+LDFLAGS = -lcrypto
 TARGET = project
-SOURCES = main.c commands.c file_management.c process_management.c terminal.c
+SOURCES = main.c commands.c file_management.c process_management.c terminal.c logger.c auth.c
 OBJECTS = $(SOURCES:.c=.o)
 
 $(TARGET): $(OBJECTS)
-	$(CC) $(CFLAGS) -o $(TARGET) $(OBJECTS)
+	$(CC) $(CFLAGS) -o $(TARGET) $(OBJECTS) $(LDFLAGS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
