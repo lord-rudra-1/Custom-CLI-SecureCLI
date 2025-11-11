@@ -1,0 +1,14 @@
+a.out
+*.o
+*.exe
+*.dll
+*.so
+*.dylib
+*.lib
+*.a
+*.h.gch
+*.h.gch.dSYM
+*.h.gch.dSYM.zip
+*.h.gch.dSYM.zip.part
+*.h.gch.dSYM.zip.part.1
+*.h.gch.dSYM.zip.part.2
