@@ -1,0 +1,12 @@
+# SecureSysCLI Configuration File
+# Copy this to .securecli_config to customize your CLI
+
+# Default color for terminal (green, cyan, blue, etc.)
+color = green
+
+# Startup directory (change to your preferred directory)
+startup_dir = .
+
+# Show banner on startup (1 = yes, 0 = no)
+show_banner = 1
+

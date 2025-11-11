@@ -1,8 +1,8 @@
 CC = gcc
 CFLAGS = -Wall -Wextra
-LDFLAGS = -lcrypto
+LDFLAGS = -lcrypto -lreadline
 TARGET = project
-SOURCES = main.c commands.c file_management.c process_management.c terminal.c logger.c auth.c
+SOURCES = main.c commands.c file_management.c process_management.c terminal.c logger.c auth.c config.c
 OBJECTS = $(SOURCES:.c=.o)
 
 $(TARGET): $(OBJECTS)
