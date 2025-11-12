@@ -132,7 +132,17 @@ void cmd_fgproc(int argc, char *argv[]) {
     }
 
     pid_t pid = jobs[jid].pid;
+    
+    // Check if process is still running
+    if (kill(pid, 0) != 0) {
+        printf("Process %d (PID %d) is no longer running.\n", jid, pid);
+        jobs[jid].running = 0;
+        remove_job(pid);
+        return;
+    }
+    
     printf("Bringing job %d (PID %d) to foreground...\n", jid, pid);
+    printf("Note: Output may not be visible (redirected when backgrounded). Press Ctrl+C to terminate.\n");
     
     // Set global variable so signal handler can forward SIGINT
     foreground_pid = pid;
@@ -145,6 +155,8 @@ void cmd_fgproc(int argc, char *argv[]) {
     
     if (WIFSIGNALED(status)) {
         printf("\nProcess terminated by signal %d\n", WTERMSIG(status));
+    } else if (WIFEXITED(status)) {
+        printf("Process exited with status %d\n", WEXITSTATUS(status));
     }
     
     jobs[jid].running = 0;   // mark as stopped/finished
