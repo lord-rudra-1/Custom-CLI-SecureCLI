@@ -6,6 +6,8 @@ void cmd_list(int argc, char *argv[]);
 void cmd_create(int argc, char *argv[]);
 void cmd_copy(int argc, char *argv[]);
 void cmd_delete(int argc, char *argv[]);
+void cmd_write(int argc, char *argv[]);
+void cmd_show(int argc, char *argv[]);
 
 #endif
 

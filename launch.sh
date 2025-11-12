@@ -3,8 +3,6 @@
 # Single-file script to build and launch SecureSysCLI
 # Usage: ./launch.sh
 
-set -e  # Exit on error
-
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
@@ -18,23 +16,31 @@ if [ ! -f "Makefile" ]; then
     exit 1
 fi
 
-# Build the project (quiet mode)
-if make clean > /dev/null 2>&1; then
-    echo "Cleaned previous build"
+# Clean previous build (suppress output)
+make clean > /dev/null 2>&1 || true
+
+# Try to build the project (show errors)
+BUILD_SUCCESS=false
+if make 2>&1; then
+    BUILD_SUCCESS=true
+    echo "Build successful!"
+else
+    echo "Build failed! Checking for existing executable..."
 fi
 
-if ! make > /dev/null 2>&1; then
-    echo "Build failed!"
-    exit 1
-fi
-
-# Check if executable exists
+# Check if executable exists (either from build or previous build)
 if [ ! -f "project" ]; then
-    echo "Error: Executable 'project' not found after build!"
+    echo "Error: Executable 'project' not found!"
+    echo "Please fix build errors and try again."
     exit 1
 fi
 
-echo "Build successful!"
+# If build failed but executable exists, warn user
+if [ "$BUILD_SUCCESS" = false ]; then
+    echo "Warning: Using existing executable from previous build."
+    echo "Some features may not work correctly. Please fix build errors."
+fi
+
 echo ""
 
 # Detect OS
@@ -67,21 +73,21 @@ fi
 
 # Linux terminal emulator detection (unchanged for Linux compatibility)
 if command -v gnome-terminal &> /dev/null; then
-    gnome-terminal --title="SecureSysCLI - QEMU Terminal" -- bash -c "cd '$SCRIPT_DIR' && ./project; exec bash"
+    gnome-terminal --title="SecureSysCLI - QEMU Terminal" -- bash -c "cd '$SCRIPT_DIR' && SECURECLI_LAUNCHED=1 ./project; exec bash"
 elif command -v xterm &> /dev/null; then
-    xterm -title "SecureSysCLI - QEMU Terminal" -e bash -c "cd '$SCRIPT_DIR' && ./project; exec bash"
+    xterm -title "SecureSysCLI - QEMU Terminal" -e bash -c "cd '$SCRIPT_DIR' && SECURECLI_LAUNCHED=1 ./project; exec bash"
 elif command -v konsole &> /dev/null; then
-    konsole --title "SecureSysCLI - QEMU Terminal" -e bash -c "cd '$SCRIPT_DIR' && ./project; exec bash"
+    konsole --title "SecureSysCLI - QEMU Terminal" -e bash -c "cd '$SCRIPT_DIR' && SECURECLI_LAUNCHED=1 ./project; exec bash"
 elif command -v xfce4-terminal &> /dev/null; then
-    xfce4-terminal --title="SecureSysCLI - QEMU Terminal" -e bash -c "cd '$SCRIPT_DIR' && ./project; exec bash"
+    xfce4-terminal --title="SecureSysCLI - QEMU Terminal" -e bash -c "cd '$SCRIPT_DIR' && SECURECLI_LAUNCHED=1 ./project; exec bash"
 elif command -v mate-terminal &> /dev/null; then
-    mate-terminal --title="SecureSysCLI - QEMU Terminal" -e bash -c "cd '$SCRIPT_DIR' && ./project; exec bash"
+    mate-terminal --title="SecureSysCLI - QEMU Terminal" -e bash -c "cd '$SCRIPT_DIR' && SECURECLI_LAUNCHED=1 ./project; exec bash"
 elif command -v lxterminal &> /dev/null; then
-    lxterminal --title="SecureSysCLI - QEMU Terminal" -e bash -c "cd '$SCRIPT_DIR' && ./project; exec bash"
+    lxterminal --title="SecureSysCLI - QEMU Terminal" -e bash -c "cd '$SCRIPT_DIR' && SECURECLI_LAUNCHED=1 ./project; exec bash"
 else
     # Fallback: try to use $TERMINAL environment variable or default
     if [ -n "$TERMINAL" ]; then
-        $TERMINAL -e bash -c "cd '$SCRIPT_DIR' && ./project; exec bash"
+        $TERMINAL -e bash -c "cd '$SCRIPT_DIR' && SECURECLI_LAUNCHED=1 ./project; exec bash"
     else
         echo "No suitable terminal emulator found. Please run: ./project"
         echo "Or install one of: gnome-terminal, xterm, konsole, xfce4-terminal"

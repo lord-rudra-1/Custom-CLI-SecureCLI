@@ -14,6 +14,7 @@
 #include "logger.h"
 #include "config.h"
 #include "signals.h"
+#include "acl.h"
 #include "plugin.h"
 #include "script.h"
 
@@ -27,7 +28,10 @@ volatile pid_t foreground_pid = 0;
 // List of available commands
 static char *command_list[] = {
     "hello", "help", "clear", "exec", "list", "create", "copy", "delete",
-    "run", "pslist", "fgproc", "bgproc", "killproc", "whoami", 
+    "run", "pslist", "fgproc", "bgproc", "killproc", "whoami",
+    "encrypt", "decrypt", "checksum",
+    "server", "client", "sandbox", "acl",
+    
     "dashboard", "source", "plugins", "exit", "quit", NULL
 };
 
@@ -61,6 +65,15 @@ static char **securecli_completion(const char *text, int start, int end) {
     }
 }
 
+static char *build_prompt(void) {
+    const char *username = (current_user && current_user->username[0])
+                               ? current_user->username
+                               : "user";
+    char prompt[512];
+    snprintf(prompt, sizeof(prompt), "SecureSysCLI@%s:~$ ", username);
+    return strdup(prompt);
+}
+
 // ---------------- Command Dispatcher ----------------
 
 struct Command {
@@ -77,12 +90,22 @@ struct Command commands[] = {
     {"create", cmd_create},
     {"copy", cmd_copy},
     {"delete", cmd_delete},
+    {"write", cmd_write},
+    {"show", cmd_show},
+    {"close", cmd_close},
     {"run", cmd_run},
     {"pslist", cmd_pslist},
     {"fgproc", cmd_fgproc},
     {"bgproc", cmd_bgproc},
     {"killproc", cmd_killproc},
     {"whoami", cmd_whoami},
+    {"encrypt", cmd_encrypt},
+    {"decrypt", cmd_decrypt},
+    {"checksum", cmd_checksum},
+    {"server", cmd_server},
+    {"client", cmd_client},
+    {"sandbox", cmd_sandbox},
+    {"acl", cmd_acl},
     {"dashboard", cmd_dashboard},
     {"source", cmd_source},
     {"plugins", cmd_plugins},
@@ -122,6 +145,7 @@ int main() {
     }
 
     load_users();
+    load_acl_rules();
     printf("🔒 Welcome to SecureSysCLI\n");
     printf("Note: Use 'exit' to quit. Ctrl+C will kill foreground processes.\n");
 
@@ -150,7 +174,9 @@ int main() {
         in_main_loop = 1;  // We're in the main loop waiting for input
         
         // Use readline for input (with history and autocomplete)
-        input_line = readline("SecureSysCLI@qemu:~$ ");
+        char *prompt = build_prompt();
+        input_line = readline(prompt);
+        free(prompt);
         
         if (!input_line) {
             // Ctrl+D or EOF - exit gracefully
@@ -171,6 +197,12 @@ int main() {
         // Exit commands
         if (strcmp(input_line, "exit") == 0 || strcmp(input_line, "quit") == 0) {
             printf("Exiting SecureSysCLI...\n");
+            free(input_line);
+            break;
+        }
+        if (strcmp(input_line, "close") == 0) {
+            char *argv_close[] = {"close", NULL};
+            cmd_close(1, argv_close);
             free(input_line);
             break;
         }
@@ -195,6 +227,13 @@ int main() {
         int found = 0;
         for (int i = 0; commands[i].name != NULL; i++) {
             if (strcmp(argv[0], commands[i].name) == 0) {
+                // Check ACL permission
+                if (!check_command_permission(argv[0])) {
+                    printf("🚫  Permission denied: you don't have permission to execute '%s'\n", argv[0]);
+                    log_command("UNAUTHORIZED command attempt");
+                    found = 1;
+                    break;
+                }
                 commands[i].func(argc, argv);
                 found = 1;
                 break;

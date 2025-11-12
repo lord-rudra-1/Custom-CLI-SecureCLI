@@ -8,16 +8,13 @@
 
 // list <dir>
 void cmd_list(int argc, char *argv[]) {
-    if (argc < 2) {
-        printf("Usage: list <dir>\n");
-        return;
-    }
+    const char *target = (argc < 2) ? "." : argv[1];
 
     DIR *d;
     struct dirent *entry;
     struct stat fileStat;
 
-    d = opendir(argv[1]);
+    d = opendir(target);
     if (d == NULL) {
         perror("opendir");
         return;
@@ -25,7 +22,7 @@ void cmd_list(int argc, char *argv[]) {
 
     while ((entry = readdir(d)) != NULL) {
         char path[1024];
-        snprintf(path, sizeof(path), "%s/%s", argv[1], entry->d_name);
+        snprintf(path, sizeof(path), "%s/%s", target, entry->d_name);
 
         if (stat(path, &fileStat) == 0) {
             printf("%c%c%c%c%c%c%c%c%c ",
@@ -113,4 +110,56 @@ void cmd_delete(int argc, char *argv[]) {
     } else {
         perror("unlink failed");
     }
+}
+
+// write <file> <content>
+void cmd_write(int argc, char *argv[]) {
+    if (argc < 3) {
+        printf("Usage: write <file> <content>\n");
+        return;
+    }
+
+    FILE *f = fopen(argv[1], "w");
+    if (!f) {
+        perror("fopen");
+        return;
+    }
+
+    for (int i = 2; i < argc; i++) {
+        if (i > 2) {
+            fputc(' ', f);
+        }
+        fputs(argv[i], f);
+    }
+    fputc('\n', f);
+
+    fclose(f);
+    printf("Wrote to file: %s\n", argv[1]);
+    log_command("write file");
+}
+
+// show <file>
+void cmd_show(int argc, char *argv[]) {
+    if (argc < 2) {
+        printf("Usage: show <file>\n");
+        return;
+    }
+
+    FILE *f = fopen(argv[1], "r");
+    if (!f) {
+        perror("fopen");
+        return;
+    }
+
+    char buffer[512];
+    while (fgets(buffer, sizeof(buffer), f)) {
+        fputs(buffer, stdout);
+    }
+
+    if (ferror(f)) {
+        perror("read error");
+    }
+
+    fclose(f);
+    log_command("show file");
 }
