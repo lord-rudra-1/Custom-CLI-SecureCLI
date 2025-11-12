@@ -33,24 +33,22 @@ void terminal_reset_color(void) {
 
 // Print QEMU-like banner
 void terminal_print_banner(void) {
+    
     terminal_set_color(COLOR_BRIGHT_CYAN);
-    printf("╔════════════════════════════════════════════════════════════╗\n");
-    printf("║                                                            ║\n");
-    printf("║");
+    printf(" ____                              ____ _     ___ \n");
+    printf("/ ___|  ___  ___ _   _ _ __ ___   / ___| |   |_ _|\n");
     terminal_set_color(COLOR_BRIGHT_GREEN);
-    printf("          SystemCLI                                         ");
-    terminal_set_color(COLOR_BRIGHT_CYAN);
-    printf("║\n");
-    printf("║                                                            ║\n");
-    printf("╚════════════════════════════════════════════════════════════╝\n");
+    printf("\\___ \\ / _ \\/ __| | | | '__/ _ \\ | |   | |    | | \n");
+    printf(" ___) |  __/ (__| |_| | | |  __/ | |___| |___ | | \n");
+    terminal_set_color(COLOR_YELLOW);
+    printf("|____/ \\___|\\___|\\__,_|_|  \\___|  \\____|_____|___|\n");
     terminal_reset_color();
     printf("\n");
-    
+        
     terminal_set_color(COLOR_CYAN);
     printf("SecureSysCLI - Operating System Command Line Interface\n");
     terminal_reset_color();
     printf("Type 'help' for available commands or 'exit' to quit.\n");
-    printf("───────────────────────────────────────────────────────────────\n\n");
 }
 
 // Print QEMU-like prompt
