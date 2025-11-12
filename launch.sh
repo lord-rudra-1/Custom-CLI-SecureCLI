@@ -73,21 +73,21 @@ fi
 
 # Linux terminal emulator detection (unchanged for Linux compatibility)
 if command -v gnome-terminal &> /dev/null; then
-    gnome-terminal --title="SecureSysCLI - QEMU Terminal" -- bash -c "cd '$SCRIPT_DIR' && ./project; exec bash"
+    gnome-terminal --title="SecureSysCLI - QEMU Terminal" -- bash -c "cd '$SCRIPT_DIR' && SECURECLI_LAUNCHED=1 ./project; exec bash"
 elif command -v xterm &> /dev/null; then
-    xterm -title "SecureSysCLI - QEMU Terminal" -e bash -c "cd '$SCRIPT_DIR' && ./project; exec bash"
+    xterm -title "SecureSysCLI - QEMU Terminal" -e bash -c "cd '$SCRIPT_DIR' && SECURECLI_LAUNCHED=1 ./project; exec bash"
 elif command -v konsole &> /dev/null; then
-    konsole --title "SecureSysCLI - QEMU Terminal" -e bash -c "cd '$SCRIPT_DIR' && ./project; exec bash"
+    konsole --title "SecureSysCLI - QEMU Terminal" -e bash -c "cd '$SCRIPT_DIR' && SECURECLI_LAUNCHED=1 ./project; exec bash"
 elif command -v xfce4-terminal &> /dev/null; then
-    xfce4-terminal --title="SecureSysCLI - QEMU Terminal" -e bash -c "cd '$SCRIPT_DIR' && ./project; exec bash"
+    xfce4-terminal --title="SecureSysCLI - QEMU Terminal" -e bash -c "cd '$SCRIPT_DIR' && SECURECLI_LAUNCHED=1 ./project; exec bash"
 elif command -v mate-terminal &> /dev/null; then
-    mate-terminal --title="SecureSysCLI - QEMU Terminal" -e bash -c "cd '$SCRIPT_DIR' && ./project; exec bash"
+    mate-terminal --title="SecureSysCLI - QEMU Terminal" -e bash -c "cd '$SCRIPT_DIR' && SECURECLI_LAUNCHED=1 ./project; exec bash"
 elif command -v lxterminal &> /dev/null; then
-    lxterminal --title="SecureSysCLI - QEMU Terminal" -e bash -c "cd '$SCRIPT_DIR' && ./project; exec bash"
+    lxterminal --title="SecureSysCLI - QEMU Terminal" -e bash -c "cd '$SCRIPT_DIR' && SECURECLI_LAUNCHED=1 ./project; exec bash"
 else
     # Fallback: try to use $TERMINAL environment variable or default
     if [ -n "$TERMINAL" ]; then
-        $TERMINAL -e bash -c "cd '$SCRIPT_DIR' && ./project; exec bash"
+        $TERMINAL -e bash -c "cd '$SCRIPT_DIR' && SECURECLI_LAUNCHED=1 ./project; exec bash"
     else
         echo "No suitable terminal emulator found. Please run: ./project"
         echo "Or install one of: gnome-terminal, xterm, konsole, xfce4-terminal"

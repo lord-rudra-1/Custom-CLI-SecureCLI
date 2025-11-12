@@ -46,10 +46,13 @@ void cmd_help(int argc, char *argv[]) {
     printf("  help                 - Show this help message\n");
     printf("  clear                - Clear the terminal screen\n");
     printf("  exec <program> [args]- Execute a system program securely\n");
-    printf("  list <dir>           - List files with permissions\n");
+    printf("  list [dir]           - List files with permissions (default: .)\n");
     printf("  create <filename>    - Create an empty file\n");
     printf("  copy <src> <dst>     - Copy a file\n");
     printf("  delete <file>        - Delete a file (admin only)\n");
+    printf("  close                - Exit and close the terminal window\n");
+    printf("  write <file> <text>  - Write text to a file\n");
+    printf("  show <file>          - Display file contents\n");
     printf("  run <program> [&]    - Run a program (background with &)\n");
     printf("  pslist               - Show background jobs\n");
     printf("  fgproc <jobid>       - Bring background job to foreground\n");
@@ -133,6 +136,31 @@ void cmd_clear(int argc, char *argv[]) {
     terminal_clear();
     terminal_print_banner();
     log_command("clear");
+}
+
+// ---------------------------------------------------------------------------
+// close - Exit SecureSysCLI and close terminal window if possible
+// ---------------------------------------------------------------------------
+void cmd_close(int argc, char *argv[]) {
+    (void)argc;
+    (void)argv;
+
+    log_command("close");
+    printf("Closing SecureSysCLI...\n");
+    fflush(stdout);
+
+    const char *launched = getenv("SECURECLI_LAUNCHED");
+    if (launched && strcmp(launched, "1") == 0) {
+        pid_t parent = getppid();
+        if (parent > 1) {
+            kill(parent, SIGTERM);
+        }
+    } else {
+        printf("(Unable to close terminal automatically in this environment.)\n");
+        fflush(stdout);
+    }
+
+    exit(0);
 }
 
 // ---------------------------------------------------------------------------

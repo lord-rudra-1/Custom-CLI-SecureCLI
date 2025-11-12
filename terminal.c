@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "terminal.h"
+#include "auth.h"
 
 // Initialize terminal - clear screen and set up
 void terminal_init(void) {
@@ -54,12 +55,16 @@ void terminal_print_banner(void) {
 
 // Print QEMU-like prompt
 void terminal_print_prompt(void) {
+    const char *username = (current_user && current_user->username[0])
+                               ? current_user->username
+                               : "user";
+
     terminal_set_color(COLOR_BRIGHT_GREEN);
     printf("SecureSysCLI");
     terminal_set_color(COLOR_WHITE);
     printf("@");
     terminal_set_color(COLOR_BRIGHT_CYAN);
-    printf("qemu");
+    printf("%s", username);
     terminal_set_color(COLOR_WHITE);
     printf(":");
     terminal_set_color(COLOR_YELLOW);

@@ -5,6 +5,7 @@
 #include <sys/wait.h>
 #include <signal.h>
 #include <sys/types.h>
+#include <fcntl.h>
 #include "auth.h"
 #include "logger.h"
 #include "signals.h"
@@ -69,6 +70,18 @@ void cmd_run(int argc, char *argv[]) {
         // Child process - restore default signal handlers
         signal(SIGINT, SIG_DFL);
         signal(SIGTERM, SIG_DFL);
+        if (background) {
+            setsid();
+            int null_fd = open("/dev/null", O_RDWR);
+            if (null_fd >= 0) {
+                dup2(null_fd, STDIN_FILENO);
+                dup2(null_fd, STDOUT_FILENO);
+                dup2(null_fd, STDERR_FILENO);
+                if (null_fd > STDERR_FILENO) {
+                    close(null_fd);
+                }
+            }
+        }
         execvp(argv[1], &argv[1]);
         perror("execvp");
         exit(1);
@@ -149,6 +162,15 @@ void cmd_bgproc(int argc, char *argv[]) {
     if (pid == 0) {
         // Child process
         setsid();  // run independently
+        int null_fd = open("/dev/null", O_RDWR);
+        if (null_fd >= 0) {
+            dup2(null_fd, STDIN_FILENO);
+            dup2(null_fd, STDOUT_FILENO);
+            dup2(null_fd, STDERR_FILENO);
+            if (null_fd > STDERR_FILENO) {
+                close(null_fd);
+            }
+        }
         execvp(argv[1], &argv[1]);
         perror("execvp");
         exit(1);

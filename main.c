@@ -25,8 +25,8 @@ volatile pid_t foreground_pid = 0;
 // List of available commands
 static char *command_list[] = {
     "hello", "help", "clear", "exec", "list", "create", "copy", "delete",
-    "run", "pslist", "fgproc", "bgproc", "killproc", "whoami",
-    "encrypt", "decrypt", "checksum",
+    "write", "show", "run", "pslist", "fgproc", "bgproc", "killproc", "whoami",
+    "encrypt", "decrypt", "checksum", "close",
     "exit", "quit", NULL
 };
 
@@ -60,6 +60,15 @@ static char **securecli_completion(const char *text, int start, int end) {
     }
 }
 
+static char *build_prompt(void) {
+    const char *username = (current_user && current_user->username[0])
+                               ? current_user->username
+                               : "user";
+    char prompt[512];
+    snprintf(prompt, sizeof(prompt), "SecureSysCLI@%s:~$ ", username);
+    return strdup(prompt);
+}
+
 // ---------------- Command Dispatcher ----------------
 
 struct Command {
@@ -76,6 +85,9 @@ struct Command commands[] = {
     {"create", cmd_create},
     {"copy", cmd_copy},
     {"delete", cmd_delete},
+    {"write", cmd_write},
+    {"show", cmd_show},
+    {"close", cmd_close},
     {"run", cmd_run},
     {"pslist", cmd_pslist},
     {"fgproc", cmd_fgproc},
@@ -145,7 +157,9 @@ int main() {
         in_main_loop = 1;  // We're in the main loop waiting for input
         
         // Use readline for input (with history and autocomplete)
-        input_line = readline("SecureSysCLI@qemu:~$ ");
+        char *prompt = build_prompt();
+        input_line = readline(prompt);
+        free(prompt);
         
         if (!input_line) {
             // Ctrl+D or EOF - exit gracefully
@@ -166,6 +180,12 @@ int main() {
         // Exit commands
         if (strcmp(input_line, "exit") == 0 || strcmp(input_line, "quit") == 0) {
             printf("Exiting SecureSysCLI...\n");
+            free(input_line);
+            break;
+        }
+        if (strcmp(input_line, "close") == 0) {
+            char *argv_close[] = {"close", NULL};
+            cmd_close(1, argv_close);
             free(input_line);
             break;
         }
