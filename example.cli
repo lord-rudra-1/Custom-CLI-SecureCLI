@@ -1,0 +1,25 @@
+# Example .cli script file for SecureSysCLI
+# This demonstrates the scripting capabilities
+
+# Set variables
+set MYDIR /tmp
+set MYFILE test.txt
+
+# Use variables with $ prefix
+echo Creating file $MYFILE in $MYDIR
+
+# Execute commands
+hello
+whoami
+
+# File operations
+create $MYFILE
+list .
+
+# Cleanup
+delete $MYFILE
+
+echo Script completed!
+
+
+

@@ -1,0 +1,64 @@
+/**
+ * @mainpage SecureSysCLI Documentation
+ *
+ * @section intro_sec Introduction
+ *
+ * SecureSysCLI is a custom command-line interface implementation that provides:
+ * - File management operations
+ * - Process management and job control
+ * - User authentication and authorization
+ * - Plugin architecture for extensibility
+ * - Scripting support with variables
+ * - Interactive ncurses dashboard
+ *
+ * @section features_sec Features
+ *
+ * @subsection core_sec Core Features
+ * - Secure command execution with input sanitization
+ * - User authentication with role-based access control
+ * - Command logging and history
+ * - Terminal UI with QEMU-like styling
+ *
+ * @subsection phase4_sec Phase 4 Features
+ * - **Dashboard**: Interactive ncurses-based terminal dashboard showing processes, memory, and logs
+ * - **Plugins**: Dynamic loading of .so shared libraries from ./plugins directory
+ * - **Scripting**: Execute .cli script files with variable support
+ * - **Custom Language**: Minimal scripting language with $VAR variable expansion
+ *
+ * @section arch_sec Architecture
+ *
+ * The project follows a modular architecture:
+ * - main.c: Entry point and command dispatcher
+ * - commands.c: Basic CLI commands
+ * - file_management.c: File operations
+ * - process_management.c: Process/job control
+ * - terminal.c: UI and terminal styling
+ * - dashboard.c: Ncurses dashboard implementation
+ * - plugin.c: Plugin loading and management
+ * - script.c: Script execution and variable handling
+ * - auth.c: Authentication and authorization
+ * - logger.c: Command logging
+ * - config.c: Configuration management
+ *
+ * @section security_sec Security Features
+ *
+ * - Input sanitization to prevent command injection
+ * - Role-based access control (admin/user)
+ * - Secure process execution using fork/exec
+ * - Command logging for audit trails
+ * - Plugin isolation through dynamic loading
+ *
+ * @section usage_sec Usage
+ *
+ * @code
+ * SecureSysCLI@qemu:~$ dashboard
+ * SecureSysCLI@qemu:~$ source setup.cli
+ * SecureSysCLI@qemu:~$ plugins
+ * @endcode
+ *
+ * @author OS Project Team
+ * @date 2024
+ */
+
+
+

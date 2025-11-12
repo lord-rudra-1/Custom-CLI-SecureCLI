@@ -10,6 +10,11 @@
 #include "logger.h"
 #include "auth.h"
 #include "signals.h"
+#include "dashboard.h"
+#include "script.h"
+#include "plugin.h"
+#include <ncurses.h>
+#include <unistd.h>
 
 // ---------------------------------------------------------------------------
 // 🔹 Input Sanitization
@@ -54,7 +59,21 @@ void cmd_help(int argc, char *argv[]) {
     printf("  bgproc <jobid>       - Resume stopped job in background\n");
     printf("  killproc <pid>       - Kill a process by PID (admin only)\n");
     printf("  whoami               - Show current user and role\n");
+    printf("  dashboard            - Launch ncurses dashboard\n");
+    printf("  source <script.cli>  - Execute a .cli script file\n");
+    printf("  plugins [cmd]        - List/manage plugins\n");
     printf("  exit / quit          - Exit the CLI\n");
+    
+    // Show loaded plugins
+    int count;
+    Plugin *plugins = plugin_get_all(&count);
+    if (count > 0) {
+        printf("\nLoaded plugins:\n");
+        for (int i = 0; i < count; i++) {
+            printf("  %s - %s\n", plugins[i].name, plugins[i].description);
+        }
+    }
+    
     log_command("help");
 }
 
@@ -142,4 +161,94 @@ void cmd_whoami(int argc, char *argv[]) {
         printf("No user logged in.\n");
     }
     log_command("whoami");
+}
+
+// ---------------------------------------------------------------------------
+// dashboard - Launch ncurses dashboard
+// ---------------------------------------------------------------------------
+
+void cmd_dashboard(int argc, char *argv[]) {
+    (void)argc; (void)argv;
+    
+    if (dashboard_init() != 0) {
+        printf("Failed to initialize dashboard. Is ncurses installed?\n");
+        return;
+    }
+
+    // Set non-blocking input with timeout
+    timeout(1000); // 1000ms (1 second) timeout
+    
+    int ch;
+    while (1) {
+        dashboard_update();
+        ch = getch();
+        
+        if (ch == 'q' || ch == 'Q') {
+            break;
+        } else if (ch == 'r' || ch == 'R' || ch == KEY_RESIZE) {
+            dashboard_update();
+        } else if (ch == ERR) {
+            // Timeout - continue loop to update display
+            continue;
+        }
+    }
+
+    dashboard_cleanup();
+    printf("Dashboard closed.\n");
+    log_command("dashboard");
+}
+
+// ---------------------------------------------------------------------------
+// source - Execute a .cli script file
+// ---------------------------------------------------------------------------
+
+void cmd_source(int argc, char *argv[]) {
+    if (argc < 2) {
+        printf("Usage: source <script.cli>\n");
+        printf("Example: source setup.cli\n");
+        return;
+    }
+
+    if (script_execute(argv[1]) != 0) {
+        printf("Failed to execute script: %s\n", argv[1]);
+    }
+    log_command("source");
+}
+
+// ---------------------------------------------------------------------------
+// plugins - List loaded plugins or manage plugins
+// ---------------------------------------------------------------------------
+
+void cmd_plugins(int argc, char *argv[]) {
+    if (argc == 1) {
+        // List all plugins
+        int count;
+        Plugin *plugins = plugin_get_all(&count);
+        if (count == 0) {
+            printf("No plugins loaded.\n");
+        } else {
+            printf("Loaded plugins (%d):\n", count);
+            for (int i = 0; i < count; i++) {
+                printf("  %s - %s\n", plugins[i].name, plugins[i].description);
+            }
+        }
+    } else if (argc == 2 && strcmp(argv[1], "reload") == 0) {
+        // Reload all plugins
+        plugin_cleanup();
+        plugin_load_all();
+        printf("Plugins reloaded.\n");
+    } else if (argc == 3 && strcmp(argv[1], "load") == 0) {
+        // Load a specific plugin
+        if (plugin_load(argv[2]) == 0) {
+            printf("Plugin loaded successfully.\n");
+        } else {
+            printf("Failed to load plugin: %s\n", argv[2]);
+        }
+    } else if (argc == 3 && strcmp(argv[1], "unload") == 0) {
+        // Unload a plugin
+        plugin_unload(argv[2]);
+    } else {
+        printf("Usage: plugins [reload|load <file>|unload <name>]\n");
+    }
+    log_command("plugins");
 }

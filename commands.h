@@ -7,6 +7,9 @@ void cmd_help(int argc, char *argv[]);
 void cmd_exec(int argc, char *argv[]);
 void cmd_clear(int argc, char *argv[]);
 void cmd_whoami(int argc, char *argv[]);
+void cmd_dashboard(int argc, char *argv[]);
+void cmd_source(int argc, char *argv[]);
+void cmd_plugins(int argc, char *argv[]);
 
 #endif
 

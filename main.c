@@ -14,6 +14,8 @@
 #include "logger.h"
 #include "config.h"
 #include "signals.h"
+#include "plugin.h"
+#include "script.h"
 
 // Global flag to track if we're in the main loop (not running a foreground process)
 static volatile sig_atomic_t in_main_loop = 1;
@@ -25,7 +27,8 @@ volatile pid_t foreground_pid = 0;
 // List of available commands
 static char *command_list[] = {
     "hello", "help", "clear", "exec", "list", "create", "copy", "delete",
-    "run", "pslist", "fgproc", "bgproc", "killproc", "whoami", "exit", "quit", NULL
+    "run", "pslist", "fgproc", "bgproc", "killproc", "whoami", 
+    "dashboard", "source", "plugins", "exit", "quit", NULL
 };
 
 // Command generator for readline completion
@@ -80,6 +83,9 @@ struct Command commands[] = {
     {"bgproc", cmd_bgproc},
     {"killproc", cmd_killproc},
     {"whoami", cmd_whoami},
+    {"dashboard", cmd_dashboard},
+    {"source", cmd_source},
+    {"plugins", cmd_plugins},
     {NULL, NULL}
 };
 
@@ -122,6 +128,10 @@ int main() {
     while (!login()) {
         printf("Try again.\n");
     }
+
+    // Initialize plugin system
+    plugin_init();
+    plugin_load_all();
 
     // Initialize QEMU-like terminal (only if show_banner is enabled)
     if (show_banner) {
@@ -191,6 +201,15 @@ int main() {
             }
         }
 
+        // Check plugins if command not found
+        if (!found) {
+            Plugin *plugin = plugin_get(argv[0]);
+            if (plugin && plugin->func) {
+                plugin->func(argc, argv);
+                found = 1;
+            }
+        }
+
         if (!found) {
             printf("Unknown command: %s\n", argv[0]);
         }
@@ -201,6 +220,9 @@ int main() {
 
     // Save history before exiting
     write_history(".securecli_history");
+    
+    // Cleanup plugins
+    plugin_cleanup();
     
     return 0;
 }

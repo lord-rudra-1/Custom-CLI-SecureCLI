@@ -1,0 +1,23 @@
+# Doxyfile for SecureSysCLI
+
+PROJECT_NAME           = "SecureSysCLI"
+PROJECT_NUMBER         = "Phase 4"
+PROJECT_BRIEF          = "A custom command-line interface with security features, plugins, and visualization"
+PROJECT_LOGO           = 
+OUTPUT_DIRECTORY       = docs
+INPUT                  = .
+FILE_PATTERNS          = *.c *.h
+RECURSIVE              = YES
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = YES
+GENERATE_LATEX         = NO
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+GENERATE_TREEVIEW      = YES
+HAVE_DOT               = NO
+CALL_GRAPH             = NO
+CALLER_GRAPH           = NO
+
+
+
