@@ -4,8 +4,9 @@
 #include <stdbool.h>
 
 // Encrypt the input file and write to output file.
-// Password is used to derive a 256-bit key using PBKDF2.
-// Output format: [16 bytes salt][16 bytes iv][ciphertext...]
+// Password is used to derive a 256-bit key using PBKDF2 (100k iterations).
+// Output format: [16 bytes salt][12 bytes iv][ciphertext...][16 bytes tag]
+// Uses AES-256-GCM for authenticated encryption.
 bool encrypt_file(const char *in_path, const char *out_path, const char *password);
 
 // Decrypt the input file (format as above) and write plaintext to out_path.

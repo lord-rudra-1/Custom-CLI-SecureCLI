@@ -11,6 +11,10 @@ void cmd_whoami(int argc, char *argv[]);
 void cmd_encrypt(int argc, char *argv[]);
 void cmd_decrypt(int argc, char *argv[]);
 void cmd_checksum(int argc, char *argv[]);
+void cmd_server(int argc, char *argv[]);
+void cmd_client(int argc, char *argv[]);
+void cmd_sandbox(int argc, char *argv[]);
+void cmd_acl(int argc, char *argv[]);
 
 #endif
 
