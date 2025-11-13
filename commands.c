@@ -71,8 +71,6 @@ void cmd_help(int argc, char *argv[]) {
     printf("  server <port>         - Start TLS server (admin only)\n");
     printf("  client <host> <port>  - Connect to TLS server\n");
     printf("  dashboard            - Launch ncurses dashboard\n");
-    printf("  source <script.cli>  - Execute a .cli script file\n");
-    printf("  plugins [cmd]        - List/manage plugins\n");
     printf("  exit / quit          - Exit the CLI\n");
     
     // Show loaded plugins
