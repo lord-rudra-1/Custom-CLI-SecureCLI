@@ -6,7 +6,6 @@
 #include "commands.h"
 #include "file_management.h"
 #include "process_management.h"
-#include "plugin.h"
 #include "logger.h"
 
 #define MAX_LINE_LENGTH 1024
@@ -165,14 +164,7 @@ static void execute_command_line(const char *line) {
         }
     }
 
-    // Check plugins
-    if (!found) {
-        Plugin *plugin = plugin_get(argv[0]);
-        if (plugin && plugin->func) {
-            plugin->func(argc, argv);
-            found = 1;
-        }
-    }
+    // No plugin support
 
     if (!found) {
         printf("Unknown command: %s\n", argv[0]);
@@ -193,13 +185,9 @@ int script_execute(const char *filename) {
     }
 
     char line[MAX_LINE_LENGTH];
-    int line_num = 0;
-
     printf("Executing script: %s\n", filename);
 
     while (fgets(line, sizeof(line), file)) {
-        line_num++;
-
         // Remove newline
         line[strcspn(line, "\n")] = 0;
 

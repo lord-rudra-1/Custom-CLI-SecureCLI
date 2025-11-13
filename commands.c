@@ -12,10 +12,8 @@
 #include "auth.h"
 #include "signals.h"
 #include "crypto.h"
-#include "remote.h"
 #include "dashboard.h"
 #include "script.h"
-#include "plugin.h"
 #include <ncurses.h>
 #include <unistd.h>
 
@@ -68,20 +66,8 @@ void cmd_help(int argc, char *argv[]) {
     printf("  encrypt <in> <out>   - Encrypt a file with password\n");
     printf("  decrypt <in> <out>    - Decrypt a file with password\n");
     printf("  checksum <file>       - Compute SHA-256 checksum of a file\n");
-    printf("  server <port>         - Start TLS server (admin only)\n");
-    printf("  client <host> <port>  - Connect to TLS server\n");
     printf("  dashboard            - Launch ncurses dashboard\n");
     printf("  exit / quit          - Exit the CLI\n");
-    
-    // Show loaded plugins
-    int count;
-    Plugin *plugins = plugin_get_all(&count);
-    if (count > 0) {
-        printf("\nLoaded plugins:\n");
-        for (int i = 0; i < count; i++) {
-            printf("  %s - %s\n", plugins[i].name, plugins[i].description);
-        }
-    }
     
     log_command("help");
 }
@@ -305,57 +291,6 @@ void cmd_checksum(int argc, char *argv[]) {
     }
 }
 
-// ---------------------------------------------------------------------------
-// server <port> - Start TLS server
-// ---------------------------------------------------------------------------
-void cmd_server(int argc, char *argv[]) {
-    if (argc < 2) {
-        printf("Usage: server <port>\n");
-        printf("Example: server 8443\n");
-        return;
-    }
-
-    if (!is_admin()) {
-        printf("🚫  Permission denied: only admin can start server.\n");
-        log_command("UNAUTHORIZED server attempt");
-        return;
-    }
-
-    int port = atoi(argv[1]);
-    if (port <= 0 || port > 65535) {
-        printf("Invalid port number. Must be between 1 and 65535.\n");
-        return;
-    }
-
-    printf("Starting TLS server on port %d...\n", port);
-    log_command("server start");
-    
-    // This will run indefinitely
-    start_tls_server(port);
-}
-
-// ---------------------------------------------------------------------------
-// client <hostname> <port> - Connect to TLS server
-// ---------------------------------------------------------------------------
-void cmd_client(int argc, char *argv[]) {
-    if (argc < 3) {
-        printf("Usage: client <hostname> <port>\n");
-        printf("Example: client localhost 8443\n");
-        return;
-    }
-
-    int port = atoi(argv[2]);
-    if (port <= 0 || port > 65535) {
-        printf("Invalid port number. Must be between 1 and 65535.\n");
-        return;
-    }
-
-    log_command("client connect");
-    
-    if (!connect_tls_client(argv[1], port)) {
-        printf("Failed to connect to server\n");
-    }
-}
 
 // ---------------------------------------------------------------------------
 // dashboard - Launch ncurses dashboard
@@ -407,42 +342,4 @@ void cmd_source(int argc, char *argv[]) {
         printf("Failed to execute script: %s\n", argv[1]);
     }
     log_command("source");
-}
-
-// ---------------------------------------------------------------------------
-// plugins - List loaded plugins or manage plugins
-// ---------------------------------------------------------------------------
-
-void cmd_plugins(int argc, char *argv[]) {
-    if (argc == 1) {
-        // List all plugins
-        int count;
-        Plugin *plugins = plugin_get_all(&count);
-        if (count == 0) {
-            printf("No plugins loaded.\n");
-        } else {
-            printf("Loaded plugins (%d):\n", count);
-            for (int i = 0; i < count; i++) {
-                printf("  %s - %s\n", plugins[i].name, plugins[i].description);
-            }
-        }
-    } else if (argc == 2 && strcmp(argv[1], "reload") == 0) {
-        // Reload all plugins
-        plugin_cleanup();
-        plugin_load_all();
-        printf("Plugins reloaded.\n");
-    } else if (argc == 3 && strcmp(argv[1], "load") == 0) {
-        // Load a specific plugin
-        if (plugin_load(argv[2]) == 0) {
-            printf("Plugin loaded successfully.\n");
-        } else {
-            printf("Failed to load plugin: %s\n", argv[2]);
-        }
-    } else if (argc == 3 && strcmp(argv[1], "unload") == 0) {
-        // Unload a plugin
-        plugin_unload(argv[2]);
-    } else {
-        printf("Usage: plugins [reload|load <file>|unload <name>]\n");
-    }
-    log_command("plugins");
 }

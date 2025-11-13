@@ -2,8 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/sysinfo.h>
 #include <time.h>
+#ifdef __linux__
+#include <sys/sysinfo.h>
+#endif
 #include "dashboard.h"
 #include "logger.h"
 
@@ -178,6 +180,8 @@ void dashboard_update(void) {
     mvwprintw(status_win, 0, 1, " System Status ");
     wattroff(status_win, COLOR_PAIR(1));
 
+    // Uptime: available on Linux via sysinfo; on other systems, skip
+#ifdef __linux__
     struct sysinfo info;
     if (sysinfo(&info) == 0) {
         long days = info.uptime / 86400;
@@ -185,6 +189,7 @@ void dashboard_update(void) {
         long mins = (info.uptime % 3600) / 60;
         mvwprintw(status_win, 1, 1, "Uptime: %ldd %ldh %ldm", days, hours, mins);
     }
+#endif
 
     time_t now = time(NULL);
     struct tm *tm_info = localtime(&now);

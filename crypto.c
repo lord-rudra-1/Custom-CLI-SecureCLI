@@ -224,23 +224,34 @@ bool sha256_file_hex(const char *path, char *out_hex) {
     FILE *f = fopen(path, "rb");
     if (!f) { return false; }
 
+    bool ok = false;
+    EVP_MD_CTX *mdctx = NULL;
     unsigned char buf[BUF_SIZE];
-    unsigned char hash[SHA256_DIGEST_LENGTH];
-    SHA256_CTX sha_ctx;
-    SHA256_Init(&sha_ctx);
+    unsigned char hash[EVP_MAX_MD_SIZE];
+    unsigned int hash_len = 0;
+
+    mdctx = EVP_MD_CTX_new();
+    if (!mdctx) { fclose(f); return false; }
+    if (EVP_DigestInit_ex(mdctx, EVP_sha256(), NULL) != 1) { goto cleanup; }
 
     size_t r;
     while ((r = fread(buf, 1, BUF_SIZE, f)) > 0) {
-        SHA256_Update(&sha_ctx, buf, r);
+        if (EVP_DigestUpdate(mdctx, buf, r) != 1) { goto cleanup; }
     }
-    if (ferror(f)) { fclose(f); return false; }
-    SHA256_Final(hash, &sha_ctx);
-    fclose(f);
+    if (ferror(f)) { goto cleanup; }
 
-    // convert to hex
-    for (int i = 0; i < SHA256_DIGEST_LENGTH; ++i) {
+    if (EVP_DigestFinal_ex(mdctx, hash, &hash_len) != 1) { goto cleanup; }
+    fclose(f);
+    f = NULL;
+
+    for (unsigned int i = 0; i < hash_len; ++i) {
         sprintf(out_hex + (i * 2), "%02x", hash[i]);
     }
-    out_hex[SHA256_DIGEST_LENGTH * 2] = '\0';
-    return true;
+    out_hex[hash_len * 2] = '\0';
+    ok = true;
+
+cleanup:
+    if (f) fclose(f);
+    if (mdctx) EVP_MD_CTX_free(mdctx);
+    return ok;
 }
