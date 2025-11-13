@@ -13,8 +13,6 @@
 #include "signals.h"
 #include "crypto.h"
 #include "remote.h"
-#include "sandbox.h"
-#include "acl.h"
 #include "dashboard.h"
 #include "script.h"
 #include "plugin.h"
@@ -72,8 +70,6 @@ void cmd_help(int argc, char *argv[]) {
     printf("  checksum <file>       - Compute SHA-256 checksum of a file\n");
     printf("  server <port>         - Start TLS server (admin only)\n");
     printf("  client <host> <port>  - Connect to TLS server\n");
-    printf("  sandbox <cmd> [args]  - Run command in sandbox (admin only)\n");
-    printf("  acl <add|list>        - Manage access control lists (admin only)\n");
     printf("  dashboard            - Launch ncurses dashboard\n");
     printf("  source <script.cli>  - Execute a .cli script file\n");
     printf("  plugins [cmd]        - List/manage plugins\n");
@@ -360,76 +356,6 @@ void cmd_client(int argc, char *argv[]) {
     
     if (!connect_tls_client(argv[1], port)) {
         printf("Failed to connect to server\n");
-    }
-}
-
-// ---------------------------------------------------------------------------
-// sandbox <command> [args...] - Run command in sandbox
-// ---------------------------------------------------------------------------
-void cmd_sandbox(int argc, char *argv[]) {
-    if (argc < 2) {
-        printf("Usage: sandbox <command> [args...]\n");
-        printf("Example: sandbox ls -la\n");
-        return;
-    }
-
-    if (!is_admin()) {
-        printf("🚫  Permission denied: only admin can use sandbox.\n");
-        log_command("UNAUTHORIZED sandbox attempt");
-        return;
-    }
-
-    log_command("sandbox");
-
-    // Prepare arguments
-    char **cmd_argv = &argv[1];
-    
-    if (run_sandboxed(argv[1], cmd_argv, NULL)) {
-        printf("Command executed successfully in sandbox\n");
-    } else {
-        printf("Sandbox execution failed (may require root privileges)\n");
-    }
-}
-
-// ---------------------------------------------------------------------------
-// acl <add|list> [username] [command] [allow|deny] - Manage ACL rules
-// ---------------------------------------------------------------------------
-void cmd_acl(int argc, char *argv[]) {
-    if (argc < 2) {
-        printf("Usage: acl <add|list> [username] [command] [allow|deny]\n");
-        printf("  acl list                    - List all ACL rules\n");
-        printf("  acl add user delete allow   - Allow user to use delete command\n");
-        printf("  acl add user * deny         - Deny all commands for user\n");
-        return;
-    }
-
-    if (strcmp(argv[1], "list") == 0) {
-        // List ACL rules (simplified - would need to read from file)
-        printf("ACL rules loaded from acl.db\n");
-        printf("Use 'acl add' to add new rules (admin only)\n");
-        log_command("acl list");
-    } else if (strcmp(argv[1], "add") == 0) {
-        if (!is_admin()) {
-            printf("🚫  Permission denied: only admin can modify ACL.\n");
-            log_command("UNAUTHORIZED acl add attempt");
-            return;
-        }
-
-        if (argc < 5) {
-            printf("Usage: acl add <username> <command> <allow|deny>\n");
-            return;
-        }
-
-        bool allowed = (strcmp(argv[4], "allow") == 0);
-        
-        if (add_acl_rule(argv[2], argv[3], allowed)) {
-            printf("ACL rule added: %s %s %s\n", argv[2], argv[3], argv[4]);
-            log_command("acl add");
-        } else {
-            printf("Failed to add ACL rule\n");
-        }
-    } else {
-        printf("Unknown ACL command: %s\n", argv[1]);
     }
 }
 

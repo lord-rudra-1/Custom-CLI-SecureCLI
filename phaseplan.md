@@ -106,19 +106,9 @@ Connect with securecli_client.
 
 Add authentication handshake over TCP (with AES or RSA encryption).
 
-Sandbox Execution
-
-Restrict execution of external programs inside a limited directory (e.g., /sandbox).
-
-Use chroot() or Linux namespaces if available.
-
 Integrity Check
 
 Add checksum verification for copied files (MD5 or SHA-256).
-
-Access Control Lists (ACL)
-
-Maintain an internal permission table for allowed commands per user.
 
 🔹 Phase 4: Visualization, Plugins, and Polish
 

@@ -1,6 +1,6 @@
 # SecureSysCLI - Custom Secure Command Line Interface
 
-A comprehensive, feature-rich command-line interface (CLI) implementation with authentication, file management, process control, encryption, remote access, sandboxing, plugin architecture, scripting support, and an interactive dashboard.
+A comprehensive, feature-rich command-line interface (CLI) implementation with authentication, file management, process control, encryption, remote access, plugin architecture, scripting support, and an interactive dashboard.
 
 ## Table of Contents
 
@@ -19,12 +19,11 @@ A comprehensive, feature-rich command-line interface (CLI) implementation with a
 ## Project Overview
 
 SecureSysCLI is a modular, secure command-line interface built in C that provides:
-- **Authentication & Authorization**: Role-based access control (admin/user) with ACL support
+- **Authentication**: Role-based login (admin/user) with hidden password entry
 - **File Management**: Complete file operations with permission checking
 - **Process Management**: Background/foreground job control with signal handling
 - **Cryptography**: AES-256-GCM encryption/decryption and SHA-256 checksums
 - **Remote Access**: TLS-secured server/client for remote CLI access
-- **Sandboxing**: Isolated execution environment for untrusted commands
 - **Plugin System**: Dynamic loading of shared library plugins
 - **Scripting**: Custom `.cli` script language with variable support
 - **Dashboard**: Real-time ncurses-based system monitoring
@@ -48,8 +47,7 @@ SecureSysCLI is a modular, secure command-line interface built in C that provide
   - **Custom Prompt**: Dynamic prompt showing `SecureSysCLI@<username>:~$`
 - **Signal Handling**: SIGINT (Ctrl+C) forwarding to foreground processes
 - **Plugin System Integration**: Checks plugins if built-in command not found
-- **ACL Enforcement**: Checks command permissions before execution
-- **Configuration Loading**: Loads config, users, and ACL rules at startup
+- **Configuration Loading**: Loads config and user database at startup
 - **Graceful Exit**: Saves history and cleans up plugins on exit
 
 **Key Functions**:
@@ -81,8 +79,6 @@ SecureSysCLI is a modular, secure command-line interface built in C that provide
 - `cmd_checksum()`: SHA-256 file checksum computation
 - `cmd_server()`: Start TLS server (admin only)
 - `cmd_client()`: Connect to TLS server
-- `cmd_sandbox()`: Run command in isolated environment (admin only)
-- `cmd_acl()`: Manage access control lists (admin only)
 - `cmd_dashboard()`: Launch ncurses dashboard
 - `cmd_source()`: Execute `.cli` script files
 - `cmd_plugins()`: List, load, unload, reload plugins
@@ -280,38 +276,6 @@ show_banner = 1
 
 ---
 
-#### `acl.c` & `acl.h` (145 lines)
-**Purpose**: Access Control List management
-
-**Key Functionality**:
-- **Rule-Based Access**: Per-user, per-command access rules
-- **Wildcard Support**: `*` for all commands
-- **Default Deny**: Secure by default
-- **Persistent Storage**: Rules saved to `acl.db`
-
-**Functions**:
-- `load_acl_rules()`: Loads ACL rules from file
-- `check_command_permission()`: Checks if user can execute command
-  - Admins always allowed
-  - Checks exact match and wildcard rules
-  - Default allow list for basic user commands
-  - Default deny for restricted commands
-- `add_acl_rule()`: Adds/updates ACL rule (admin only)
-  - Saves to `acl.db` file
-
-**ACL File Format**:
-```
-username command allow
-username * deny
-```
-
-**Default Behavior**:
-- Admin: All commands allowed
-- User: Basic commands allowed (hello, help, list, etc.)
-- User: Restricted commands denied (delete, killproc, exec, run)
-
----
-
 ### Remote Access
 
 #### `remote.c` & `remote.h` (454 lines)
@@ -342,33 +306,6 @@ username * deny
 - TLS encryption for all communication
 - Password authentication required
 - Self-signed certs (demo only - production needs proper certs)
-
----
-
-### Sandboxing
-
-#### `sandbox.c` & `sandbox.h` (192 lines)
-**Purpose**: Isolated execution environment
-
-**Key Functionality**:
-- **Chroot Isolation**: Changes root directory to sandbox
-- **Namespace Isolation**: Uses Linux `clone()` with `CLONE_NEWNS`
-- **Minimal Environment**: Creates minimal directory structure
-- **Admin Only**: Requires admin privileges
-
-**Functions**:
-- `run_sandboxed()`: Executes command in sandbox
-  - Creates sandbox directory structure (`/bin`, `/usr/bin`, `/lib`, `/tmp`, etc.)
-  - Uses `clone()` with new mount namespace
-  - Falls back to simple chroot if clone fails
-- `setup_sandbox_dir()`: Creates sandbox directory structure
-- `sandbox_child()`: Child process function that performs chroot
-
-**Sandbox Directory**: `/tmp/securecli_sandbox` (default)
-
-**Limitations**:
-- Requires root or appropriate capabilities for full functionality
-- Minimal environment may not support all commands
 
 ---
 
@@ -568,48 +505,36 @@ echo Setup complete!
    - Authentication required
    - Self-signed certificates (demo)
 
-7. **Sandboxing**
-   - Isolated execution environment
-   - Chroot-based isolation
-   - Namespace support
-   - Admin-only access
-
-8. **Access Control Lists**
-   - Per-user, per-command rules
-   - Wildcard support
-   - Default deny policy
-   - Persistent storage
-
-9. **Plugin System**
+7. **Plugin System**
    - Dynamic loading of `.so` plugins
    - Runtime function discovery
    - Plugin management (load/unload/reload)
    - Auto-loading from `./plugins`
 
-10. **Scripting Language**
+8. **Scripting Language**
     - Custom `.cli` script files
     - Variable support (`$VAR`)
     - Comments (`#`)
     - Batch command execution
 
-11. **Interactive Dashboard**
+9. **Interactive Dashboard**
     - Real-time process monitoring
     - Memory usage display
     - Command log viewer
     - System status (uptime, load, time)
 
-12. **Terminal UI**
+10. **Terminal UI**
     - Figlet-style ASCII banner
     - Colored prompts
     - Dynamic username display
     - ANSI color support
 
-13. **Command Logging**
+11. **Command Logging**
     - All commands logged with timestamps
     - Persistent log file
     - Audit trail
 
-14. **Configuration System**
+12. **Configuration System**
     - Configurable startup directory
     - Banner display toggle
     - Color scheme settings
@@ -652,11 +577,6 @@ echo Setup complete!
 ### Remote Access
 - `server <port>` - Start TLS server (admin only)
 - `client <hostname> <port>` - Connect to TLS server
-
-### Security & Access Control
-- `sandbox <cmd> [args]` - Run command in sandbox (admin only)
-- `acl add <username> <command> <allow|deny>` - Add ACL rule (admin only)
-- `acl list` - List all ACL rules (admin only)
 
 ### Advanced Features
 - `dashboard` - Launch interactive ncurses dashboard
@@ -861,8 +781,6 @@ main.c                    - Entry point, REPL, command dispatch
 ├── config.c             - Configuration
 ├── crypto.c             - Cryptography
 ├── remote.c             - TLS server/client
-├── sandbox.c            - Sandbox execution
-├── acl.c                - Access control
 ├── plugin.c             - Plugin system
 ├── script.c             - Scripting engine
 └── dashboard.c          - Interactive dashboard
@@ -872,10 +790,9 @@ main.c                    - Entry point, REPL, command dispatch
 
 1. **User Input**: Readline reads input with history/completion
 2. **Tokenization**: Input split into command and arguments
-3. **ACL Check**: Permission verified before execution
-4. **Command Dispatch**: Command matched to function or plugin
-5. **Execution**: Command executed with logging
-6. **Output**: Results displayed to user
+3. **Command Dispatch**: Command matched to function or plugin
+4. **Execution**: Command executed with logging
+5. **Output**: Results displayed to user
 
 ### Global State
 
@@ -884,7 +801,6 @@ main.c                    - Entry point, REPL, command dispatch
 - `in_main_loop`: Flag indicating if in main loop (for signal handling)
 - Plugin registry: Loaded plugins (from `plugin.c`)
 - Job table: Background processes (from `process_management.c`)
-- ACL rules: Access control rules (from `acl.c`)
 
 ---
 
@@ -900,7 +816,7 @@ main.c                    - Entry point, REPL, command dispatch
 
 ### System Requirements
 
-- Linux (uses Linux-specific features: `clone()`, `/proc`, etc.)
+- Linux (uses Linux-specific features: `/proc`, etc.)
 - POSIX-compliant system
 - Terminal with ANSI color support
 - OpenSSL 1.1+ or 3.0+
@@ -927,8 +843,6 @@ Custom-CLI-SecureCLI/
 ├── config.c/h             - Configuration
 ├── crypto.c/h             - Cryptography
 ├── remote.c/h             - TLS remote access
-├── sandbox.c/h            - Sandbox execution
-├── acl.c/h                - Access control
 ├── plugin.c/h             - Plugin system
 ├── script.c/h             - Scripting engine
 ├── dashboard.c/h           - Interactive dashboard
@@ -937,7 +851,6 @@ Custom-CLI-SecureCLI/
 ├── launch.sh              - Launch script
 ├── README.md              - This file
 ├── users.db                - User database (created at runtime)
-├── acl.db                  - ACL rules (created at runtime)
 ├── securecli.log           - Command log (created at runtime)
 ├── .securecli_history      - Command history (created at runtime)
 ├── .securecli_config       - Configuration file (optional)
@@ -1037,7 +950,7 @@ SecureSysCLI@admin:~$ dashboard
 - **Unused Files**: `cli.c` and `project.c` are old duplicate versions and not used in the build
 - **Build Artifacts**: `*.o` files and `project` executable should not be committed (use `.gitignore`)
 - **Security**: This is a demonstration project. For production use, additional security hardening is recommended
-- **Root Requirements**: Some features (sandbox, certain operations) may require root privileges
+- **Privileges**: Running the TLS server on privileged ports may require elevated permissions
 
 ---
 

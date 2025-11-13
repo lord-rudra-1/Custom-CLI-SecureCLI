@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Wall -Wextra -fPIC
 LDFLAGS = -lcrypto -lreadline -lssl -lncurses -ldl
 TARGET = project
-SOURCES = main.c commands.c file_management.c process_management.c terminal.c logger.c auth.c config.c crypto.c remote.c sandbox.c acl.c dashboard.c plugin.c script.c
+SOURCES = main.c commands.c file_management.c process_management.c terminal.c logger.c auth.c config.c crypto.c remote.c dashboard.c plugin.c script.c
 OBJECTS = $(SOURCES:.c=.o)
 
 $(TARGET): $(OBJECTS)

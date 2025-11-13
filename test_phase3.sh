@@ -59,18 +59,7 @@ echo "Note: Manual password entry required for encryption tests"
 strings ./project | grep -q "encrypt_file" && test_check "Encrypt function present" || echo -e "${YELLOW}⚠ Warning: encrypt_file not found in binary${NC}"
 
 echo ""
-echo "3. Testing ACL System..."
-echo "-----------------------"
-
-# Check if ACL functions are compiled
-strings ./project | grep -q "check_command_permission" && test_check "ACL functions present" || echo -e "${YELLOW}⚠ Warning: ACL functions not found${NC}"
-
-# Test ACL file creation
-echo "testuser delete allow" > acl.db 2>/dev/null
-test_check "ACL file can be created"
-
-echo ""
-echo "4. Testing Remote/TLS Features..."
+echo "3. Testing Remote/TLS Features..."
 echo "----------------------------------"
 
 # Check if TLS functions are compiled
@@ -78,24 +67,17 @@ strings ./project | grep -q "start_tls_server" && test_check "TLS server functio
 strings ./project | grep -q "connect_tls_client" && test_check "TLS client function present" || echo -e "${YELLOW}⚠ Warning: TLS client function not found${NC}"
 
 echo ""
-echo "5. Testing Sandbox Features..."
-echo "------------------------------"
-
-# Check if sandbox functions are compiled
-strings ./project | grep -q "run_sandboxed" && test_check "Sandbox function present" || echo -e "${YELLOW}⚠ Warning: Sandbox function not found${NC}"
-
 echo ""
-echo "6. Testing Command Integration..."
+echo "4. Testing Command Integration..."
 echo "---------------------------------"
 
 # Check if new commands are in command list
 strings ./project | grep -q "cmd_server" && test_check "Server command integrated" || echo -e "${YELLOW}⚠ Warning: Server command not found${NC}"
 strings ./project | grep -q "cmd_client" && test_check "Client command integrated" || echo -e "${YELLOW}⚠ Warning: Client command not found${NC}"
-strings ./project | grep -q "cmd_sandbox" && test_check "Sandbox command integrated" || echo -e "${YELLOW}⚠ Warning: Sandbox command not found${NC}"
-strings ./project | grep -q "cmd_acl" && test_check "ACL command integrated" || echo -e "${YELLOW}⚠ Warning: ACL command not found${NC}"
+strings ./project | grep -q "cmd_plugins" && test_check "Plugin command integrated" || echo -e "${YELLOW}⚠ Warning: Plugin command not found${NC}"
 
 echo ""
-echo "7. Testing Help Command..."
+echo "5. Testing Help Command..."
 echo "--------------------------"
 
 # Create a test input file
@@ -108,7 +90,7 @@ EOF
 timeout 2 ./project < test_help_input.txt 2>&1 | grep -q "server" && test_check "Help shows new commands" || echo -e "${YELLOW}⚠ Warning: Help command test inconclusive${NC}"
 
 echo ""
-echo "8. Testing File Format (AES-GCM)..."
+echo "6. Testing File Format (AES-GCM)..."
 echo "------------------------------------"
 
 # Check if PBKDF2_ITER is set to 100000
@@ -121,7 +103,7 @@ grep -q "EVP_aes_256_gcm" crypto.c && test_check "AES-GCM encryption mode" || te
 grep -q "TAG_SIZE" crypto.c && test_check "GCM tag size defined" || test_check "GCM tag check"
 
 echo ""
-echo "9. Testing Error Handling..."
+echo "7. Testing Error Handling..."
 echo "----------------------------"
 
 # Check if generic error messages are used (both encryption and decryption)
