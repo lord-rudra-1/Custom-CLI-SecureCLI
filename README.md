@@ -2,20 +2,6 @@
 
 A comprehensive, feature-rich command-line interface (CLI) implementation with authentication, file management, process control, encryption, remote access, plugin architecture, scripting support, and an interactive dashboard.
 
-## Table of Contents
-
-- [Project Overview](#project-overview)
-- [Complete File Documentation](#complete-file-documentation)
-- [Feature Summary](#feature-summary)
-- [All Commands](#all-commands)
-- [User Interface Features](#user-interface-features)
-- [Security Features](#security-features)
-- [Building and Running](#building-and-running)
-- [Architecture](#architecture)
-- [Dependencies](#dependencies)
-
----
-
 ## Project Overview
 
 SecureSysCLI is a modular, secure command-line interface built in C that provides:
@@ -23,9 +9,6 @@ SecureSysCLI is a modular, secure command-line interface built in C that provide
 - **File Management**: Complete file operations with permission checking
 - **Process Management**: Background/foreground job control with signal handling
 - **Cryptography**: AES-256-GCM encryption/decryption and SHA-256 checksums
-- **Remote Access**: TLS-secured server/client for remote CLI access
-- **Plugin System**: Dynamic loading of shared library plugins
-- **Scripting**: Custom `.cli` script language with variable support
 - **Dashboard**: Real-time ncurses-based system monitoring
 - **Advanced UI**: Readline integration with history, autocomplete, and arrow key navigation
 
@@ -274,72 +257,7 @@ show_banner = 1
 - Memory clearing of keys and passwords
 - Generic error messages (no information leakage)
 
----
 
-### Remote Access
-
-#### `remote.c` & `remote.h` (454 lines)
-**Purpose**: TLS-secured remote CLI access
-
-**Key Functionality**:
-- **TLS Server**: Accepts encrypted connections
-- **TLS Client**: Connects to remote servers
-- **Self-Signed Certificates**: Auto-generates for demo (production should use proper certs)
-- **Authentication**: Remote users must login
-- **Command Execution**: Executes commands remotely
-
-**Functions**:
-- `start_tls_server()`: Starts TLS server on specified port
-  - Creates self-signed certificate if needed
-  - Forks for each client connection
-  - Handles authentication
-  - Executes commands and sends output
-- `connect_tls_client()`: Connects to TLS server
-  - Interactive command loop
-  - Non-blocking I/O for better UX
-- `handle_client()`: Handles individual client connection
-  - Authentication loop
-  - Command execution via `popen()`
-  - Sends output back to client
-
-**Security Features**:
-- TLS encryption for all communication
-- Password authentication required
-- Self-signed certs (demo only - production needs proper certs)
-
----
-
-### Plugin System
-
-#### `plugin.c` & `plugin.h` (218 lines)
-**Purpose**: Dynamic plugin loading system
-
-**Key Functionality**:
-- **Dynamic Loading**: Uses `dlopen()`/`dlsym()` for runtime loading
-- **Plugin Directory**: Loads from `./plugins` directory
-- **Function Discovery**: Multiple naming conventions supported
-- **Plugin Management**: Load, unload, reload plugins
-
-**Functions**:
-- `plugin_init()`: Initializes plugin system
-- `plugin_load()`: Loads a specific `.so` plugin file
-  - Tries multiple function name conventions
-  - Calls initialization function if present
-  - Extracts description if available
-- `plugin_load_all()`: Auto-loads all plugins from `./plugins`
-- `plugin_get()`: Gets plugin by name
-- `plugin_get_all()`: Gets all loaded plugins
-- `plugin_unload()`: Unloads a plugin
-- `plugin_cleanup()`: Cleans up all plugins on exit
-
-**Plugin Interface**:
-- Command function: `plugin_<name>_command(int argc, char *argv[])`
-- Description function: `plugin_<name>_description(void)`
-- Init function (optional): `plugin_<name>_init(void)`
-
-**Plugin Directory**: `./plugins/`
-
----
 
 ### Scripting
 
@@ -499,17 +417,6 @@ echo Setup complete!
    - SHA-256 file checksums
    - Secure memory clearing
 
-6. **Remote Access**
-   - TLS-secured server/client
-   - Remote command execution
-   - Authentication required
-   - Self-signed certificates (demo)
-
-7. **Plugin System**
-   - Dynamic loading of `.so` plugins
-   - Runtime function discovery
-   - Plugin management (load/unload/reload)
-   - Auto-loading from `./plugins`
 
 8. **Scripting Language**
     - Custom `.cli` script files
@@ -574,17 +481,9 @@ echo Setup complete!
 - `decrypt <in> <out>` - Decrypt a file with password
 - `checksum <file>` - Compute SHA-256 checksum of a file
 
-### Remote Access
-- `server <port>` - Start TLS server (admin only)
-- `client <hostname> <port>` - Connect to TLS server
-
 ### Advanced Features
 - `dashboard` - Launch interactive ncurses dashboard
 - `source <script.cli>` - Execute a `.cli` script file
-- `plugins` - List all loaded plugins
-- `plugins load <file>` - Load a plugin (admin only)
-- `plugins unload <name>` - Unload a plugin (admin only)
-- `plugins reload` - Reload all plugins (admin only)
 
 ---
 
