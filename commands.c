@@ -6,7 +6,7 @@
 #include <signal.h>
 #include <stdbool.h>
 #include <ctype.h>
-#include <termios.h>
+#include <termios.h> // Terminal I/O control - used to disable echo when reading passwords (tcgetattr, tcsetattr, ECHO flag)
 #include "terminal.h"
 #include "logger.h"
 #include "auth.h"

@@ -9,6 +9,8 @@ SecureSysCLI is a modular, secure command-line interface built in C that provide
 - **File Management**: Complete file operations with permission checking
 - **Process Management**: Background/foreground job control with signal handling
 - **Cryptography**: AES-256-GCM encryption/decryption and SHA-256 checksums
+- **Remote Access**: TLS-secured server/client for remote administration
+- **Scripting & Plugins**: Batch automation and extensibility at runtime
 - **Dashboard**: Real-time ncurses-based system monitoring
 - **Advanced UI**: Readline integration with history, autocomplete, and arrow key navigation
 
@@ -42,7 +44,7 @@ SecureSysCLI is a modular, secure command-line interface built in C that provide
 
 ---
 
-#### `commands.c` & `commands.h` (524 lines)
+#### `commands.c` & `commands.h` (448 lines)
 **Purpose**: Implements all built-in CLI commands with input sanitization
 
 **Key Functionality**:
@@ -387,7 +389,7 @@ echo Setup complete!
 
 1. **Authentication System**
    - Password-based login with SHA-256 hashing
-   - Role-based access control (admin/user)
+   - Role-based command restrictions (admin/user)
    - Hidden password input
    - User database in `users.db`
 
@@ -402,7 +404,7 @@ echo Setup complete!
    - Create, copy, delete files
    - Write text to files
    - Display file contents
-   - Permission-based access control
+   - Permission-aware operations
 
 4. **Process Management**
    - Run programs in foreground/background
@@ -417,34 +419,43 @@ echo Setup complete!
    - SHA-256 file checksums
    - Secure memory clearing
 
+6. **Remote Access**
+   - TLS-secured server/client pair
+   - Mutual authentication workflow
+   - Encrypted remote command execution
+
+7. **Plugin System**
+   - Runtime loading/unloading of `.so` extensions
+   - Automatic discovery from the plugins directory
+   - Admin-controlled lifecycle management
 
 8. **Scripting Language**
-    - Custom `.cli` script files
-    - Variable support (`$VAR`)
-    - Comments (`#`)
-    - Batch command execution
+   - Custom `.cli` script files
+   - Variable support (`$VAR`)
+   - Comments (`#`)
+   - Batch command execution
 
 9. **Interactive Dashboard**
-    - Real-time process monitoring
-    - Memory usage display
-    - Command log viewer
-    - System status (uptime, load, time)
+   - Real-time process monitoring
+   - Memory usage display
+   - Command log viewer
+   - System status (uptime, load, time)
 
 10. **Terminal UI**
-    - Figlet-style ASCII banner
-    - Colored prompts
-    - Dynamic username display
-    - ANSI color support
+   - Figlet-style ASCII banner
+   - Colored prompts
+   - Dynamic username display
+   - ANSI color support
 
 11. **Command Logging**
-    - All commands logged with timestamps
-    - Persistent log file
-    - Audit trail
+   - All commands logged with timestamps
+   - Persistent log file
+   - Audit trail
 
 12. **Configuration System**
-    - Configurable startup directory
-    - Banner display toggle
-    - Color scheme settings
+   - Configurable startup directory
+   - Banner display toggle
+   - Color scheme settings
 
 ---
 
@@ -481,9 +492,14 @@ echo Setup complete!
 - `decrypt <in> <out>` - Decrypt a file with password
 - `checksum <file>` - Compute SHA-256 checksum of a file
 
+### Remote Access
+- `server <port>` - Start TLS server (admin only)
+- `client <hostname> <port>` - Connect to TLS server
+
 ### Advanced Features
 - `dashboard` - Launch interactive ncurses dashboard
 - `source <script.cli>` - Execute a `.cli` script file
+- `plugins` - Manage runtime plugins (list/load/unload/reload)
 
 ---
 
@@ -545,16 +561,10 @@ echo Setup complete!
    - Hidden password input (no echo)
    - Memory clearing after use
 
-2. **Role-Based Access Control**
+2. **Role-Based Command Restrictions**
    - Admin and user roles
-   - Admin-only commands enforced
-   - Default deny policy
-
-3. **Access Control Lists**
-   - Per-user, per-command rules
-   - Wildcard support
-   - Persistent storage
-   - Secure by default
+   - Admin-only commands enforced inside handlers
+   - Logged authorization failures for auditing
 
 ### Input Security
 
@@ -574,11 +584,6 @@ echo Setup complete!
    - Uses `fork()`/`execvp()` instead of `system()`
    - Prevents shell injection
    - Signal handling isolation
-
-2. **Sandboxing**
-   - Isolated execution environment
-   - Chroot-based isolation
-   - Namespace support
 
 ### Cryptographic Security
 
